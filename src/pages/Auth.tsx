@@ -4,14 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Session } from "@supabase/supabase-js";
 
 const authSchema = z.object({
   email: z.string().email("Email invalide"),
-  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+  password: z
+    .string()
+    .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
 });
 
 export default function Auth() {
@@ -23,7 +32,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       if (session) {
         navigate("/admin");
@@ -54,7 +65,7 @@ export default function Auth() {
         });
 
         if (error) throw error;
-        
+
         toast({
           title: "Connexion réussie",
           description: "Bienvenue dans l'administration Isaraya",
@@ -107,7 +118,9 @@ export default function Auth() {
             Administration Isaraya
           </CardTitle>
           <CardDescription className="text-center">
-            {isLogin ? "Connectez-vous à votre compte" : "Créer un compte administrateur"}
+            {isLogin
+              ? "Connectez-vous à votre compte"
+              : "Créer un compte administrateur"}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleAuth}>
@@ -137,8 +150,13 @@ export default function Auth() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Chargement..." : isLogin ? "Se connecter" : "Créer un compte"}
+              {loading
+                ? "Chargement..."
+                : isLogin
+                ? "Se connecter"
+                : "Créer un compte"}
             </Button>
+            {/*
             <Button
               type="button"
               variant="ghost"
@@ -147,6 +165,7 @@ export default function Auth() {
             >
               {isLogin ? "Créer un compte" : "Déjà un compte ? Se connecter"}
             </Button>
+            */}
           </CardFooter>
         </form>
       </Card>
