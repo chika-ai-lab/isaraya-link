@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  VITE_SUPABASE_PROJECT_ID = ""
+  VITE_SUPABASE_PUBLISHABLE_KEY = ""
+  VITE_SUPABASE_URL = ""
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[secrets_scanning]
+  omit_keys = ["VITE_SUPABASE_URL", "VITE_SUPABASE_PROJECT_ID", "VITE_SUPABASE_PUBLISHABLE_KEY"]
