@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       company_info: {
@@ -19,6 +44,7 @@ export type Database = {
           address: string
           company_name: string
           created_at: string | null
+          custom_colors: Json | null
           description: string
           email: string
           facebook: string | null
@@ -26,17 +52,22 @@ export type Database = {
           id: string
           instagram: string | null
           linkedin: string | null
+          logo_url: string | null
           phone: string
           slogan: string
+          theme_preset: string | null
+          tiktok: string | null
           twitter: string | null
           updated_at: string | null
           website: string
           whatsapp: string | null
+          youtube: string | null
         }
         Insert: {
           address?: string
           company_name?: string
           created_at?: string | null
+          custom_colors?: Json | null
           description?: string
           email?: string
           facebook?: string | null
@@ -44,17 +75,22 @@ export type Database = {
           id?: string
           instagram?: string | null
           linkedin?: string | null
+          logo_url?: string | null
           phone?: string
           slogan?: string
+          theme_preset?: string | null
+          tiktok?: string | null
           twitter?: string | null
           updated_at?: string | null
           website?: string
           whatsapp?: string | null
+          youtube?: string | null
         }
         Update: {
           address?: string
           company_name?: string
           created_at?: string | null
+          custom_colors?: Json | null
           description?: string
           email?: string
           facebook?: string | null
@@ -62,12 +98,16 @@ export type Database = {
           id?: string
           instagram?: string | null
           linkedin?: string | null
+          logo_url?: string | null
           phone?: string
           slogan?: string
+          theme_preset?: string | null
+          tiktok?: string | null
           twitter?: string | null
           updated_at?: string | null
           website?: string
           whatsapp?: string | null
+          youtube?: string | null
         }
         Relationships: []
       }
@@ -81,6 +121,7 @@ export type Database = {
           is_active: boolean | null
           is_featured: boolean | null
           price: string | null
+          profile_id: string | null
           title: string
           updated_at: string | null
         }
@@ -93,6 +134,7 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           price?: string | null
+          profile_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -105,8 +147,98 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           price?: string | null
+          profile_id?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          company_name: string
+          created_at: string | null
+          custom_colors: Json | null
+          description: string | null
+          email: string | null
+          facebook: string | null
+          google_maps_url: string | null
+          id: string
+          instagram: string | null
+          is_active: boolean | null
+          linkedin: string | null
+          logo_url: string | null
+          phone: string | null
+          slogan: string | null
+          slug: string
+          theme_preset: string | null
+          tiktok: string | null
+          twitter: string | null
+          updated_at: string | null
+          user_id: string | null
+          website: string | null
+          whatsapp: string | null
+          youtube: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_name: string
+          created_at?: string | null
+          custom_colors?: Json | null
+          description?: string | null
+          email?: string | null
+          facebook?: string | null
+          google_maps_url?: string | null
+          id?: string
+          instagram?: string | null
+          is_active?: boolean | null
+          linkedin?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          slogan?: string | null
+          slug: string
+          theme_preset?: string | null
+          tiktok?: string | null
+          twitter?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          created_at?: string | null
+          custom_colors?: Json | null
+          description?: string | null
+          email?: string | null
+          facebook?: string | null
+          google_maps_url?: string | null
+          id?: string
+          instagram?: string | null
+          is_active?: boolean | null
+          linkedin?: string | null
+          logo_url?: string | null
+          phone?: string | null
+          slogan?: string | null
+          slug?: string
+          theme_preset?: string | null
+          tiktok?: string | null
+          twitter?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+          whatsapp?: string | null
+          youtube?: string | null
         }
         Relationships: []
       }
@@ -118,6 +250,7 @@ export type Database = {
           display_order: number | null
           id: string
           is_active: boolean | null
+          profile_id: string | null
           title: string
           updated_at: string | null
           valid_until: string | null
@@ -129,6 +262,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_active?: boolean | null
+          profile_id?: string | null
           title: string
           updated_at?: string | null
           valid_until?: string | null
@@ -140,11 +274,20 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_active?: boolean | null
+          profile_id?: string | null
           title?: string
           updated_at?: string | null
           valid_until?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "promotions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -154,6 +297,7 @@ export type Database = {
           icon: string
           id: string
           is_active: boolean | null
+          profile_id: string | null
           title: string
           updated_at: string | null
         }
@@ -164,6 +308,7 @@ export type Database = {
           icon: string
           id?: string
           is_active?: boolean | null
+          profile_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -174,10 +319,19 @@ export type Database = {
           icon?: string
           id?: string
           is_active?: boolean | null
+          profile_id?: string | null
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -202,6 +356,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_unique_slug: { Args: { base_name: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -209,6 +364,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_slug_available: { Args: { slug_to_check: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
@@ -337,6 +493,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "user"],

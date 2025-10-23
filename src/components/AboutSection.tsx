@@ -1,7 +1,14 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Profile } from "@/types";
 
-const AboutSection = () => {
+interface AboutSectionProps {
+  profile: Profile;
+}
+
+const AboutSection = ({ profile }: AboutSectionProps) => {
+  if (!profile.description) return null;
+
   return (
     <section className="py-8 px-4">
       <motion.div
@@ -13,13 +20,10 @@ const AboutSection = () => {
       >
         <Card className="bg-card/50 backdrop-blur-sm border-border/50 p-6 hover:bg-card/70 transition-colors">
           <h2 className="text-2xl font-bold mb-4 text-foreground">
-            À propos d'Isaraya
+            À propos de {profile.company_name}
           </h2>
-          <p className="text-foreground/80 leading-relaxed">
-            Isaraya est votre destination shopping moderne au cœur de Dakar. 
-            Nous proposons une sélection pointue de produits high-tech et de services innovants 
-            pour accompagner votre quotidien. Notre mission : rendre la technologie accessible 
-            à tous avec un service client d'excellence et des prix compétitifs.
+          <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
+            {profile.description}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium">

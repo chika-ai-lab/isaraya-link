@@ -1,7 +1,11 @@
 import { motion } from "framer-motion";
-import logo from "@/assets/isaraya-logo.png";
+import { Profile } from "@/types";
 
-const ProfileHeader = () => {
+interface ProfileHeaderProps {
+  profile: Profile;
+}
+
+const ProfileHeader = ({ profile }: ProfileHeaderProps) => {
   return (
     <motion.header
       className="text-center py-12 px-4"
@@ -9,26 +13,39 @@ const ProfileHeader = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
     >
-      <motion.div
-        className="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden bg-card/30 backdrop-blur-sm p-4 border-2 border-primary/20"
-        whileHover={{ scale: 1.05, rotate: 5 }}
-        transition={{ type: "spring", stiffness: 300 }}
-      >
-        <img
-          src={logo}
-          alt="Isaraya Logo"
-          className="w-full h-full object-cover scale-125"
-        />
-      </motion.div>
+      {profile.logo_url && (
+        <motion.div
+          className="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden bg-card/30 backdrop-blur-sm p-4 border-2 border-primary/20"
+          whileHover={{ rotate: 5 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <img
+            src={profile.logo_url}
+            alt={`${profile.company_name} Logo`}
+            className="w-full h-full object-contain"
+          />
+        </motion.div>
+      )}
 
-      <motion.p
-        className="text-lg md:text-xl text-foreground/80 font-medium italic"
+      <motion.h1
+        className="text-4xl md:text-5xl font-bold mb-2 text-foreground"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.3 }}
       >
-        Vivez la modernité, shoppez chez I-Saraya
-      </motion.p>
+        {profile.company_name}
+      </motion.h1>
+
+      {profile.slogan && (
+        <motion.p
+          className="text-lg md:text-xl text-foreground/80 font-medium italic"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          {profile.slogan}
+        </motion.p>
+      )}
 
       <motion.div
         className="mt-6 h-1 w-24 mx-auto bg-gradient-to-r from-primary to-secondary rounded-full"

@@ -1,167 +1,258 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { Trash2, Plus } from "lucide-react";
+import { useState } from 'react';
+import { useServices, useCreateService, useUpdateService, useDeleteService } from '@/hooks/useServices';
+import { Service } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Plus, Edit, Trash2, Briefcase } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  is_active: boolean;
-  display_order: number;
+interface ServicesManagerProps {
+  profileId: string;
 }
 
-export function ServicesManager() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(false);
+export function ServicesManager({ profileId }: ServicesManagerProps) {
+  const { data: services = [], isLoading } = useServices(profileId);
+  const createService = useCreateService();
+  const updateService = useUpdateService();
+  const deleteService = useDeleteService();
 
-  useEffect(() => {
-    loadServices();
-  }, []);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    icon: '',
+    is_active: true,
+  });
 
-  const loadServices = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .order("display_order");
-
-      if (error) throw error;
-      setServices(data || []);
-    } catch (error) {
-      console.error("Error loading services:", error);
-    }
-  };
-
-  const handleAdd = () => {
-    const newService: Service = {
-      id: crypto.randomUUID(),
-      title: "",
-      description: "",
-      icon: "Smartphone",
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      icon: 'Briefcase',
       is_active: true,
-      display_order: services.length,
-    };
-    setServices([...services, newService]);
+    });
+    setEditingService(null);
   };
 
-  const handleChange = (id: string, field: keyof Service, value: string | boolean | number) => {
-    setServices(services.map(s => s.id === id ? { ...s, [field]: value } : s));
+  const handleOpenDialog = (service?: Service) => {
+    if (service) {
+      setEditingService(service);
+      setFormData({
+        title: service.title,
+        description: service.description,
+        icon: service.icon,
+        is_active: service.is_active ?? true,
+      });
+    } else {
+      resetForm();
+    }
+    setDialogOpen(true);
   };
 
-  const handleSave = async (service: Service) => {
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     try {
-      const { data: existing } = await supabase
-        .from("services")
-        .select("id")
-        .eq("id", service.id)
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
-          .from("services")
-          .update({
-            title: service.title,
-            description: service.description,
-            icon: service.icon,
-            is_active: service.is_active,
-            display_order: service.display_order,
-          })
-          .eq("id", service.id);
-
-        if (error) throw error;
+      if (editingService) {
+        await updateService.mutateAsync({
+          id: editingService.id,
+          updates: formData,
+        });
       } else {
-        const { error } = await supabase
-          .from("services")
-          .insert([service]);
-
-        if (error) throw error;
+        await createService.mutateAsync({
+          ...formData,
+          profile_id: profileId,
+          display_order: services.length,
+        });
       }
-
-      toast({ title: "Succès", description: "Service enregistré" });
-      loadServices();
+      setDialogOpen(false);
+      resetForm();
     } catch (error) {
-      toast({ title: "Erreur", description: "Échec de l'enregistrement", variant: "destructive" });
-    } finally {
-      setLoading(false);
+      console.error('Error saving service:', error);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase.from("services").delete().eq("id", id);
-      if (error) throw error;
-      
-      toast({ title: "Succès", description: "Service supprimé" });
-      loadServices();
-    } catch (error) {
-      toast({ title: "Erreur", description: "Échec de la suppression", variant: "destructive" });
+  const handleDelete = async (service: Service) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${service.title}"?`)) {
+      await deleteService.mutateAsync({ id: service.id, profileId });
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Services</CardTitle>
-            <CardDescription>Gérez les services affichés sur votre profil</CardDescription>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Services</CardTitle>
+              <CardDescription>
+                Gérez les services proposés par votre entreprise
+              </CardDescription>
+            </div>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => handleOpenDialog()}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Ajouter un service
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <form onSubmit={handleSubmit}>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingService ? 'Modifier le service' : 'Nouveau service'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingService
+                        ? 'Modifiez les informations du service'
+                        : 'Ajoutez un nouveau service à votre offre'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Titre *</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        required
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="icon">Icône (nom Lucide)</Label>
+                      <Input
+                        id="icon"
+                        placeholder="Ex: Briefcase, Phone, Mail..."
+                        value={formData.icon}
+                        onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Voir les icônes sur{' '}
+                        <a
+                          href="https://lucide.dev/icons/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          lucide.dev
+                        </a>
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="is_active">Actif</Label>
+                      <Switch
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setDialogOpen(false);
+                        resetForm();
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createService.isPending || updateService.isPending}
+                    >
+                      {(createService.isPending || updateService.isPending) && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {editingService ? 'Mettre à jour' : 'Créer'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-          <Button onClick={handleAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {services.map((service) => (
-          <Card key={service.id}>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Titre</Label>
-                  <Input
-                    value={service.title}
-                    onChange={(e) => handleChange(service.id, "title", e.target.value)}
-                    placeholder="Nom du service"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Icône (Lucide)</Label>
-                  <Input
-                    value={service.icon}
-                    onChange={(e) => handleChange(service.id, "icon", e.target.value)}
-                    placeholder="Smartphone"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={service.description}
-                  onChange={(e) => handleChange(service.id, "description", e.target.value)}
-                  placeholder="Description du service"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={() => handleSave(service)} disabled={loading}>
-                  Enregistrer
-                </Button>
-                <Button onClick={() => handleDelete(service.id)} variant="destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {services.length === 0 ? (
+            <Alert>
+              <Briefcase className="h-4 w-4" />
+              <AlertDescription>
+                Aucun service pour le moment. Cliquez sur "Ajouter un service" pour commencer.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-4">
+              {services.map((service) => (
+                <Card key={service.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{service.title}</CardTitle>
+                          {!service.is_active && (
+                            <Badge variant="outline">Inactif</Badge>
+                          )}
+                        </div>
+                        <CardDescription className="mt-1">
+                          {service.description}
+                        </CardDescription>
+                        {service.icon && (
+                          <p className="text-xs text-muted-foreground mt-2">Icône: {service.icon}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenDialog(service)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(service)}
+                          disabled={deleteService.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

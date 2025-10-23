@@ -1,190 +1,274 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { Trash2, Plus } from "lucide-react";
+import { useState } from 'react';
+import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from '@/hooks/useProducts';
+import { Product } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  price: string;
-  image_url: string | null;
-  is_featured: boolean;
-  is_active: boolean;
-  display_order: number;
+interface ProductsManagerProps {
+  profileId: string;
 }
 
-export function ProductsManager() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+export function ProductsManager({ profileId }: ProductsManagerProps) {
+  const { data: products = [], isLoading } = useProducts(profileId);
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
+  const deleteProduct = useDeleteProduct();
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    image_url: '',
+    is_featured: false,
+    is_active: true,
+  });
 
-  const loadProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("display_order");
-
-      if (error) throw error;
-      setProducts(data || []);
-    } catch (error) {
-      console.error("Error loading products:", error);
-    }
-  };
-
-  const handleAdd = () => {
-    const newProduct: Product = {
-      id: crypto.randomUUID(),
-      title: "",
-      description: "",
-      price: "",
-      image_url: null,
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      price: '',
+      image_url: '',
       is_featured: false,
       is_active: true,
-      display_order: products.length,
-    };
-    setProducts([...products, newProduct]);
+    });
+    setEditingProduct(null);
   };
 
-  const handleChange = (id: string, field: keyof Product, value: string | boolean | number | null) => {
-    setProducts(products.map(p => p.id === id ? { ...p, [field]: value } : p));
+  const handleOpenDialog = (product?: Product) => {
+    if (product) {
+      setEditingProduct(product);
+      setFormData({
+        title: product.title,
+        description: product.description,
+        price: product.price || '',
+        image_url: product.image_url || '',
+        is_featured: product.is_featured || false,
+        is_active: product.is_active ?? true,
+      });
+    } else {
+      resetForm();
+    }
+    setDialogOpen(true);
   };
 
-  const handleSave = async (product: Product) => {
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     try {
-      const { data: existing } = await supabase
-        .from("products")
-        .select("id")
-        .eq("id", product.id)
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
-          .from("products")
-          .update({
-            title: product.title,
-            description: product.description,
-            price: product.price,
-            image_url: product.image_url,
-            is_featured: product.is_featured,
-            is_active: product.is_active,
-            display_order: product.display_order,
-          })
-          .eq("id", product.id);
-
-        if (error) throw error;
+      if (editingProduct) {
+        await updateProduct.mutateAsync({
+          id: editingProduct.id,
+          updates: formData,
+        });
       } else {
-        const { error } = await supabase
-          .from("products")
-          .insert([product]);
-
-        if (error) throw error;
+        await createProduct.mutateAsync({
+          ...formData,
+          profile_id: profileId,
+          display_order: products.length,
+        });
       }
-
-      toast({ title: "Succès", description: "Produit enregistré" });
-      loadProducts();
+      setDialogOpen(false);
+      resetForm();
     } catch (error) {
-      toast({ title: "Erreur", description: "Échec de l'enregistrement", variant: "destructive" });
-    } finally {
-      setLoading(false);
+      console.error('Error saving product:', error);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-      if (error) throw error;
-      
-      toast({ title: "Succès", description: "Produit supprimé" });
-      loadProducts();
-    } catch (error) {
-      toast({ title: "Erreur", description: "Échec de la suppression", variant: "destructive" });
+  const handleDelete = async (product: Product) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${product.title}"?`)) {
+      await deleteProduct.mutateAsync({ id: product.id, profileId });
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Produits</CardTitle>
-            <CardDescription>Gérez les produits affichés sur votre profil</CardDescription>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Produits</CardTitle>
+              <CardDescription>
+                Gérez les produits de votre profil d'entreprise
+              </CardDescription>
+            </div>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => handleOpenDialog()}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Ajouter un produit
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <form onSubmit={handleSubmit}>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingProduct ? 'Modifier le produit' : 'Nouveau produit'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingProduct
+                        ? 'Modifiez les informations du produit'
+                        : 'Ajoutez un nouveau produit à votre catalogue'}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Titre *</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        required
+                        rows={3}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Prix</Label>
+                      <Input
+                        id="price"
+                        placeholder="Ex: 50 000 FCFA"
+                        value={formData.price}
+                        onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="image_url">URL de l'image</Label>
+                      <Input
+                        id="image_url"
+                        type="url"
+                        placeholder="https://..."
+                        value={formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="is_featured">Produit vedette</Label>
+                      <Switch
+                        id="is_featured"
+                        checked={formData.is_featured}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="is_active">Actif</Label>
+                      <Switch
+                        id="is_active"
+                        checked={formData.is_active}
+                        onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setDialogOpen(false);
+                        resetForm();
+                      }}
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createProduct.isPending || updateProduct.isPending}
+                    >
+                      {(createProduct.isPending || updateProduct.isPending) && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {editingProduct ? 'Mettre à jour' : 'Créer'}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-          <Button onClick={handleAdd}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {products.map((product) => (
-          <Card key={product.id}>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Titre</Label>
-                  <Input
-                    value={product.title}
-                    onChange={(e) => handleChange(product.id, "title", e.target.value)}
-                    placeholder="Nom du produit"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Prix</Label>
-                  <Input
-                    value={product.price}
-                    onChange={(e) => handleChange(product.id, "price", e.target.value)}
-                    placeholder="Prix"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={product.description}
-                  onChange={(e) => handleChange(product.id, "description", e.target.value)}
-                  placeholder="Description du produit"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>URL de l'image</Label>
-                <Input
-                  value={product.image_url || ""}
-                  onChange={(e) => handleChange(product.id, "image_url", e.target.value)}
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={product.is_featured}
-                  onChange={(e) => handleChange(product.id, "is_featured", e.target.checked)}
-                  id={`featured-${product.id}`}
-                />
-                <Label htmlFor={`featured-${product.id}`}>Produit phare</Label>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={() => handleSave(product)} disabled={loading}>
-                  Enregistrer
-                </Button>
-                <Button onClick={() => handleDelete(product.id)} variant="destructive">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {products.length === 0 ? (
+            <Alert>
+              <Package className="h-4 w-4" />
+              <AlertDescription>
+                Aucun produit pour le moment. Cliquez sur "Ajouter un produit" pour commencer.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-4">
+              {products.map((product) => (
+                <Card key={product.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{product.title}</CardTitle>
+                          {product.is_featured && (
+                            <Badge variant="secondary">Vedette</Badge>
+                          )}
+                          {!product.is_active && (
+                            <Badge variant="outline">Inactif</Badge>
+                          )}
+                        </div>
+                        <CardDescription className="mt-1">
+                          {product.description}
+                        </CardDescription>
+                        {product.price && (
+                          <p className="text-sm font-medium mt-2">{product.price}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenDialog(product)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(product)}
+                          disabled={deleteProduct.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

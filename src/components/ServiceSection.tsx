@@ -1,31 +1,14 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Smartphone, Laptop, Headphones, ShoppingBag } from "lucide-react";
+import { Service } from "@/types";
 
-const services = [
-  {
-    icon: Smartphone,
-    title: "Smartphones & Accessoires",
-    description: "Derniers modèles et accessoires tendance"
-  },
-  {
-    icon: Laptop,
-    title: "Informatique",
-    description: "Ordinateurs, tablettes et périphériques"
-  },
-  {
-    icon: Headphones,
-    title: "Audio & Gaming",
-    description: "Casques, enceintes et consoles"
-  },
-  {
-    icon: ShoppingBag,
-    title: "Service Après-Vente",
-    description: "Garantie et support technique"
-  }
-];
+interface ServiceSectionProps {
+  services: Service[];
+}
 
-const ServiceSection = () => {
+const ServiceSection = ({ services }: ServiceSectionProps) => {
+  if (services.length === 0) return null;
+
   return (
     <section className="py-8 px-4">
       <motion.div
@@ -41,7 +24,7 @@ const ServiceSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {services.map((service, index) => (
             <motion.div
-              key={service.title}
+              key={service.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -51,7 +34,7 @@ const ServiceSection = () => {
               <Card className="bg-card/50 backdrop-blur-sm border-border/50 p-6 h-full hover:bg-card/70 hover:border-primary/30 transition-all group">
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-primary/20 rounded-lg group-hover:bg-primary/30 transition-colors">
-                    <service.icon className="w-6 h-6 text-primary" />
+                    <span className="text-2xl">{service.icon || '🔧'}</span>
                   </div>
                   <div>
                     <h3 className="font-bold text-lg mb-2 text-foreground">

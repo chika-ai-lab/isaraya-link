@@ -104,5 +104,24 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    // DaisyUI sera ajouté une fois installé
+    ...((() => {
+      try {
+        return [require("daisyui")];
+      } catch {
+        console.log("DaisyUI not installed yet, skipping...");
+        return [];
+      }
+    })()),
+  ],
+  // Configuration DaisyUI (si disponible)
+  daisyui: {
+    themes: false, // We'll use custom themes from our component
+    styled: true,
+    base: true,
+    utils: true,
+    logs: false,
+  },
 } satisfies Config;

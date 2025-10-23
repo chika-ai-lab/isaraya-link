@@ -8,18 +8,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
 
+// Helper function to normalize URLs - add https:// if missing
+const normalizeUrl = (url: string): string => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  // If it already has a protocol, return as is
+  if (trimmed.match(/^https?:\/\//i)) {
+    return trimmed;
+  }
+
+  // Add https:// prefix
+  return `https://${trimmed}`;
+};
+
 const companySchema = z.object({
   company_name: z.string().min(1, "Le nom est requis").max(100),
   slogan: z.string().max(200),
   phone: z.string().max(20),
   email: z.string().email("Email invalide").max(100),
   address: z.string().max(200),
-  google_maps_url: z.string().url("URL invalide").optional().or(z.literal("")),
+  google_maps_url: z.string().max(500),
   website: z.string().max(100),
   description: z.string().max(1000),
   facebook: z.string().max(100),
   instagram: z.string().max(100),
   twitter: z.string().max(100),
+  tiktok: z.string().max(100),
+  youtube: z.string().max(100),
   linkedin: z.string().max(100),
   whatsapp: z.string().max(20),
 });
@@ -41,6 +58,8 @@ export function CompanyInfoForm() {
     facebook: "",
     instagram: "",
     twitter: "",
+    tiktok: "",
+    youtube: "",
     linkedin: "",
     whatsapp: "",
   });
@@ -72,6 +91,8 @@ export function CompanyInfoForm() {
           facebook: data.facebook || "",
           instagram: data.instagram || "",
           twitter: data.twitter || "",
+          tiktok: data.tiktok || "",
+          youtube: data.youtube || "",
           linkedin: data.linkedin || "",
           whatsapp: data.whatsapp || "",
         });
@@ -91,7 +112,14 @@ export function CompanyInfoForm() {
     setLoading(true);
 
     try {
-      const validatedData = companySchema.parse(formData);
+      // Normalize URLs before validation
+      const normalizedData = {
+        ...formData,
+        website: normalizeUrl(formData.website),
+        google_maps_url: normalizeUrl(formData.google_maps_url),
+      };
+
+      const validatedData = companySchema.parse(normalizedData);
 
       const { error } = await supabase
         .from("company_info")
@@ -99,6 +127,9 @@ export function CompanyInfoForm() {
         .eq("id", companyId);
 
       if (error) throw error;
+
+      // Update form with normalized URLs
+      setFormData(normalizedData);
 
       toast({
         title: "Succès",
@@ -243,6 +274,24 @@ export function CompanyInfoForm() {
                 id="twitter"
                 value={formData.twitter}
                 onChange={(e) => handleChange("twitter", e.target.value)}
+                placeholder="@isaraya"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tiktok">TikTok</Label>
+              <Input
+                id="tiktok"
+                value={formData.tiktok}
+                onChange={(e) => handleChange("tiktok", e.target.value)}
+                placeholder="@isaraya"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="youtube">YouTube</Label>
+              <Input
+                id="youtube"
+                value={formData.youtube}
+                onChange={(e) => handleChange("youtube", e.target.value)}
                 placeholder="@isaraya"
               />
             </div>

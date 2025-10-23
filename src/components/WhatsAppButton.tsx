@@ -1,11 +1,17 @@
 import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Profile } from "@/types";
 
-const WhatsAppButton = () => {
-  const whatsappNumber = "221774156565";
-  const message = "Bonjour Isaraya, je souhaite obtenir plus d'informations";
-  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+interface WhatsAppButtonProps {
+  profile: Profile;
+}
+
+const WhatsAppButton = ({ profile }: WhatsAppButtonProps) => {
+  if (!profile.whatsapp) return null;
+
+  const message = `Bonjour ${profile.company_name}, je souhaite obtenir plus d'informations`;
+  const whatsappUrl = `https://wa.me/${profile.whatsapp.replace(/\s/g, '')}?text=${encodeURIComponent(message)}`;
 
   return (
     <motion.div

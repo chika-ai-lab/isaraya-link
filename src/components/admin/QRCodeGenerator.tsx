@@ -4,11 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { Download } from "lucide-react";
+import { toast } from "sonner";
+import { Download, Copy } from "lucide-react";
+import { Profile } from "@/types";
 
-export function QRCodeGenerator() {
-  const [url, setUrl] = useState(window.location.origin);
+interface QRCodeGeneratorProps {
+  profile: Profile;
+}
+
+export function QRCodeGenerator({ profile }: QRCodeGeneratorProps) {
+  const profileUrl = `${window.location.origin}/${profile.slug}`;
+  const [url, setUrl] = useState(profileUrl);
   const [size, setSize] = useState(512);
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -28,17 +34,14 @@ export function QRCodeGenerator() {
       ctx?.drawImage(img, 0, 0);
       canvas.toBlob((blob) => {
         if (blob) {
-          const url = URL.createObjectURL(blob);
+          const blobUrl = URL.createObjectURL(blob);
           const link = document.createElement("a");
-          link.download = "isaraya-qrcode.png";
-          link.href = url;
+          link.download = `${profile.slug}-qrcode.png`;
+          link.href = blobUrl;
           link.click();
-          URL.revokeObjectURL(url);
-          
-          toast({
-            title: "Succès",
-            description: "QR Code téléchargé",
-          });
+          URL.revokeObjectURL(blobUrl);
+
+          toast.success("QR Code téléchargé avec succès!");
         }
       });
     };
@@ -46,24 +49,42 @@ export function QRCodeGenerator() {
     img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+      toast.success("URL copiée dans le presse-papier!");
+    } catch (error) {
+      toast.error("Impossible de copier l'URL");
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Générateur de QR Code</CardTitle>
         <CardDescription>
-          Générez un QR code pour votre profil Isaraya
+          Générez un QR code pour partager votre profil {profile.company_name}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="url">URL du profil</Label>
-            <Input
-              id="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder={window.location.origin}
-            />
+            <Label htmlFor="url">URL de votre profil</Label>
+            <div className="flex gap-2">
+              <Input
+                id="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder={profileUrl}
+                className="flex-1"
+              />
+              <Button onClick={handleCopyUrl} variant="outline" size="icon">
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Votre profil est accessible à: <strong className="text-primary">{profileUrl}</strong>
+            </p>
           </div>
 
           <div className="space-y-2">
