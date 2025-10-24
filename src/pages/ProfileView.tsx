@@ -40,17 +40,17 @@ const ProfileView = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/95 font-['Inter',sans-serif]">
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50">
         <Link to="/auth">
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
             <Settings className="h-4 w-4" />
           </Button>
         </Link>
       </div>
 
-      <main className="relative max-w-6xl mx-auto pb-20">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10" />
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10" />
+      <main className="relative max-w-6xl mx-auto pb-20 sm:pb-24">
+        <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-secondary/10 rounded-full blur-3xl -z-10" />
 
         <ProfileHeader profile={profile} />
         <ContactLinks profile={profile} />
@@ -63,10 +63,10 @@ const ProfileView = () => {
 
       <WhatsAppButton profile={profile} />
 
-      <footer className="text-center py-8 text-muted-foreground text-sm border-t border-border/30">
+      <footer className="text-center py-6 sm:py-8 px-4 text-muted-foreground text-xs sm:text-sm border-t border-border/30">
         <p>© 2025 {profile.company_name}. Tous droits réservés.</p>
         {(profile.address || profile.phone) && (
-          <p className="mt-2">
+          <p className="mt-2 break-words">
             {profile.address && profile.address}
             {profile.address && profile.phone && ' - '}
             {profile.phone && profile.phone}

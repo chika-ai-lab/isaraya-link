@@ -10,7 +10,7 @@ const AboutSection = ({ profile }: AboutSectionProps) => {
   if (!profile.description) return null;
 
   return (
-    <section className="py-8 px-4">
+    <section className="py-6 sm:py-8 px-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -18,11 +18,11 @@ const AboutSection = ({ profile }: AboutSectionProps) => {
         transition={{ duration: 0.6 }}
         className="max-w-2xl mx-auto"
       >
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50 p-6 hover:bg-card/70 transition-colors">
-          <h2 className="text-2xl font-bold mb-4 text-foreground">
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50 p-4 sm:p-6 hover:bg-card/70 transition-colors">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-foreground">
             À propos de {profile.company_name}
           </h2>
-          <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm sm:text-base text-foreground/80 leading-relaxed whitespace-pre-wrap">
             {profile.description}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">

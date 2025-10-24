@@ -8,14 +8,14 @@ interface ProfileHeaderProps {
 const ProfileHeader = ({ profile }: ProfileHeaderProps) => {
   return (
     <motion.header
-      className="text-center py-12 px-4"
+      className="text-center py-8 sm:py-12 px-4"
       initial={{ opacity: 0, y: -30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
     >
       {profile.logo_url && (
         <motion.div
-          className="w-40 h-40 mx-auto mb-6 rounded-full overflow-hidden bg-card/30 backdrop-blur-sm p-4 border-2 border-primary/20"
+          className="w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-4 sm:mb-6 rounded-full overflow-hidden bg-card/30 backdrop-blur-sm p-3 sm:p-4 border-2 border-primary/20"
           whileHover={{ rotate: 5 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
@@ -28,7 +28,7 @@ const ProfileHeader = ({ profile }: ProfileHeaderProps) => {
       )}
 
       <motion.h1
-        className="text-4xl md:text-5xl font-bold mb-2 text-foreground"
+        className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 text-foreground px-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
@@ -38,7 +38,7 @@ const ProfileHeader = ({ profile }: ProfileHeaderProps) => {
 
       {profile.slogan && (
         <motion.p
-          className="text-lg md:text-xl text-foreground/80 font-medium italic"
+          className="text-base sm:text-lg md:text-xl text-foreground/80 font-medium italic px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}

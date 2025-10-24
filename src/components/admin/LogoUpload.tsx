@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 interface LogoUploadProps {
   currentLogoUrl?: string;
@@ -26,44 +27,38 @@ export function LogoUpload({ currentLogoUrl, onLogoChange, profileId }: LogoUplo
       return;
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('L\'image ne doit pas dépasser 2 MB');
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('L\'image ne doit pas dépasser 5 MB');
       return;
     }
 
     setUploading(true);
 
     try {
-      // Create FormData
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('profileId', profileId);
-
-      // Upload to local /uploads directory
-      // For now, we'll use a data URL for preview
+      // Create local preview immediately
       const reader = new FileReader();
       reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        setPreview(dataUrl);
-
-        // Generate a unique filename
-        const timestamp = Date.now();
-        const extension = file.name.split('.').pop();
-        const filename = `logo-${profileId}-${timestamp}.${extension}`;
-        const uploadPath = `/uploads/${filename}`;
-
-        // In production, you would upload to server or cloud storage
-        // For now, we'll store the data URL
-        onLogoChange(dataUrl);
-
-        toast.success('Logo uploadé avec succès!');
+        setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
 
+      // Upload to Cloudinary
+      const result = await uploadToCloudinary(file, {
+        folder: 'logos',
+        tags: ['logo', profileId],
+      });
+
+      // Update with Cloudinary URL
+      setPreview(result.secure_url);
+      onLogoChange(result.secure_url);
+
+      toast.success('Logo uploadé avec succès!');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      toast.error('Erreur lors de l\'upload du logo');
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'upload du logo';
+      toast.error(errorMessage);
+      setPreview(null);
     } finally {
       setUploading(false);
     }
@@ -83,7 +78,7 @@ export function LogoUpload({ currentLogoUrl, onLogoChange, profileId }: LogoUplo
       <CardHeader>
         <CardTitle>Logo de l'entreprise</CardTitle>
         <CardDescription>
-          Uploadez le logo de votre entreprise (format: PNG, JPG, max 2MB)
+          Uploadez le logo de votre entreprise (format: PNG, JPG, max 5MB)
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -145,7 +140,7 @@ export function LogoUpload({ currentLogoUrl, onLogoChange, profileId }: LogoUplo
           <div className="bg-muted/50 p-3 rounded-lg">
             <p className="text-xs text-muted-foreground text-center">
               Formats acceptés: JPG, PNG, GIF<br />
-              Taille maximale: 2 MB<br />
+              Taille maximale: 5 MB<br />
               Dimensions recommandées: 400x400 px (carré)
             </p>
           </div>
