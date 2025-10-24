@@ -10,12 +10,12 @@ interface WhatsAppButtonProps {
 const WhatsAppButton = ({ profile }: WhatsAppButtonProps) => {
   if (!profile.whatsapp) return null;
 
-  const phoneNumber = profile.whatsapp.replace(/\s/g, '').replace(/^\+/, '');
+  const phoneNumber = profile.whatsapp.replace(/\s/g, "").replace(/^\+/, "");
   const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}`;
 
   return (
     <motion.div
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50"
+      className="fixed bottom-4 right-4 sm:bottom-6 cursor-pointer aspect-square  sm:right-6 z-50"
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 1.5, type: "spring", stiffness: 260, damping: 20 }}
@@ -36,9 +36,9 @@ const WhatsAppButton = ({ profile }: WhatsAppButtonProps) => {
           <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8" />
         </a>
       </Button>
-      
+
       <motion.div
-        className="absolute inset-0 rounded-full bg-[#25D366]"
+        className="absolute inset-0 rounded-full pointer-events-none bg-[#25D366]"
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.5, 0, 0.5],
