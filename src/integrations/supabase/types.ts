@@ -177,6 +177,8 @@ export type Database = {
           linkedin: string | null
           logo_url: string | null
           phone: string | null
+          qr_code_custom_url: string | null
+          qr_code_size: number | null
           slogan: string | null
           slug: string
           theme_preset: string | null
@@ -203,6 +205,8 @@ export type Database = {
           linkedin?: string | null
           logo_url?: string | null
           phone?: string | null
+          qr_code_custom_url?: string | null
+          qr_code_size?: number | null
           slogan?: string | null
           slug: string
           theme_preset?: string | null
@@ -229,6 +233,8 @@ export type Database = {
           linkedin?: string | null
           logo_url?: string | null
           phone?: string | null
+          qr_code_custom_url?: string | null
+          qr_code_size?: number | null
           slogan?: string | null
           slug?: string
           theme_preset?: string | null
