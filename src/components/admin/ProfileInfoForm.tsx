@@ -17,6 +17,7 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
   const updateProfile = useUpdateProfile();
   const [formData, setFormData] = useState({
     company_name: profile.company_name || "",
+    slug: profile.slug || "",
     slogan: profile.slogan || "",
     description: profile.description || "",
     logo_url: profile.logo_url || "",
@@ -25,6 +26,7 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
   useEffect(() => {
     setFormData({
       company_name: profile.company_name || "",
+      slug: profile.slug || "",
       slogan: profile.slogan || "",
       description: profile.description || "",
       logo_url: profile.logo_url || "",
@@ -33,6 +35,13 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation du slug
+    const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+    if (!slugRegex.test(formData.slug)) {
+      toast.error("Le slug doit contenir uniquement des lettres minuscules, chiffres et tirets (ex: mon-entreprise)");
+      return;
+    }
 
     try {
       await updateProfile.mutateAsync({
@@ -46,6 +55,18 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSlugChange = (value: string) => {
+    // Nettoyer automatiquement le slug pendant la saisie
+    const cleanedSlug = value
+      .toLowerCase()
+      .replace(/\s+/g, '-') // Remplacer espaces par tirets
+      .replace(/[^a-z0-9-]/g, '') // Supprimer caractères non autorisés
+      .replace(/-+/g, '-') // Éviter les tirets multiples
+      .replace(/^-|-$/g, ''); // Supprimer tirets en début/fin
+
+    setFormData((prev) => ({ ...prev, slug: cleanedSlug }));
   };
 
   return (
@@ -69,6 +90,26 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
               required
               placeholder="Ma Super Entreprise"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="slug">
+              URL du profil (slug) <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="slug"
+              value={formData.slug}
+              onChange={(e) => handleSlugChange(e.target.value)}
+              required
+              placeholder="mon-entreprise"
+              pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
+            />
+            <p className="text-xs text-muted-foreground">
+              Votre profil sera accessible à: <strong className="text-primary">{window.location.origin}/{formData.slug || "..."}</strong>
+            </p>
+            <p className="text-xs text-amber-600">
+              ⚠️ Changer le slug modifie l'URL d'accès au profil. Les anciens liens ne fonctionneront plus.
+            </p>
           </div>
 
           <div className="space-y-2">

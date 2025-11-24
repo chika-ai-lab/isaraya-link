@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { MoreVertical, Eye, Edit, QrCode, Trash2, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProfileCardProps {
   profile: Profile;
@@ -54,6 +55,7 @@ export const ProfileCard = ({ profile }: ProfileCardProps) => {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(fullUrl);
+    toast.success('Lien copié dans le presse-papier!');
   };
 
   return (

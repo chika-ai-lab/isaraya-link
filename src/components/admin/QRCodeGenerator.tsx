@@ -16,22 +16,12 @@ interface QRCodeGeneratorProps {
 export function QRCodeGenerator({ profile }: QRCodeGeneratorProps) {
   const profileUrl = `${window.location.origin}/${profile.slug}`;
   const updateProfile = useUpdateProfile();
-  const [url, setUrl] = useState(profileUrl);
   const [qrCodeSize, setQrCodeSize] = useState(profile.qr_code_size || 512);
-  const [customUrl, setCustomUrl] = useState(profile.qr_code_custom_url || "");
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setQrCodeSize(profile.qr_code_size || 512);
-    setCustomUrl(profile.qr_code_custom_url || "");
-    setUrl(profile.qr_code_custom_url || profileUrl);
-  }, [profile, profileUrl]);
-
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newUrl = e.target.value;
-    setCustomUrl(newUrl);
-    setUrl(newUrl || profileUrl);
-  };
+  }, [profile]);
 
   const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQrCodeSize(parseInt(e.target.value));
@@ -45,10 +35,9 @@ export function QRCodeGenerator({ profile }: QRCodeGeneratorProps) {
         id: profile.id,
         updates: {
           qr_code_size: qrCodeSize,
-          qr_code_custom_url: customUrl || null,
         },
       });
-      toast.success("Paramètres du QR Code enregistrés avec succès!");
+      toast.success("Taille du QR Code enregistrée avec succès!");
     } catch (error) {
       console.error("Error updating QR Code settings:", error);
       toast.error("Erreur lors de l'enregistrement des paramètres");
@@ -107,29 +96,27 @@ export function QRCodeGenerator({ profile }: QRCodeGeneratorProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="url">URL de votre profil</Label>
+              <Label htmlFor="url">URL du profil</Label>
               <div className="flex gap-2">
                 <Input
                   id="url"
-                  value={customUrl}
-                  onChange={handleUrlChange}
-                  placeholder={profileUrl}
-                  className="flex-1"
+                  value={profileUrl}
+                  readOnly
+                  className="flex-1 bg-muted"
                 />
                 <Button onClick={handleCopyUrl} type="button" variant="outline" size="icon">
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                URL par défaut: <strong className="text-primary">{profileUrl}</strong>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Laissez vide pour utiliser l'URL par défaut, ou entrez une URL personnalisée
-              </p>
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
+                <p className="text-xs text-blue-900 dark:text-blue-100">
+                  💡 <strong>Astuce :</strong> Pour modifier l'URL du profil, changez le <strong>slug</strong> dans l'onglet "Informations du profil".
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="size">Taille (px)</Label>
+              <Label htmlFor="size">Taille du QR Code (px)</Label>
               <Input
                 id="size"
                 type="number"
@@ -138,6 +125,9 @@ export function QRCodeGenerator({ profile }: QRCodeGeneratorProps) {
                 value={qrCodeSize}
                 onChange={handleSizeChange}
               />
+              <p className="text-xs text-muted-foreground">
+                Taille recommandée: 512px pour l'impression
+              </p>
             </div>
           </div>
 
@@ -147,7 +137,7 @@ export function QRCodeGenerator({ profile }: QRCodeGeneratorProps) {
               className="p-8 bg-white rounded-lg border-2 border-border"
             >
               <QRCodeSVG
-                value={url}
+                value={profileUrl}
                 size={Math.min(qrCodeSize, 400)}
                 level="H"
                 includeMargin
@@ -165,7 +155,7 @@ export function QRCodeGenerator({ profile }: QRCodeGeneratorProps) {
           <div className="bg-muted p-4 rounded-lg">
             <p className="text-sm text-muted-foreground">
               Ce QR code peut être imprimé sur des cartes de visite, affiches, ou tout autre support marketing.
-              Lorsqu'il est scanné, il redirige directement vers votre profil Isaraya.
+              Lorsqu'il est scanné, il redirige directement vers votre profil : <strong>{profileUrl}</strong>
             </p>
           </div>
 
