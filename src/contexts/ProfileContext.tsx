@@ -17,7 +17,7 @@ const CURRENT_PROFILE_KEY = 'isaraya_current_profile_id';
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const { data: profiles = [], isLoading, refetch } = useProfiles();
+  const { data: profiles = [], isLoading, refetch } = useProfiles(!!user);
   const [currentProfile, setCurrentProfileState] = useState<Profile | null>(null);
 
   // Charger le profil courant depuis localStorage au montage

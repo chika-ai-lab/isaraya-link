@@ -14,7 +14,7 @@ interface ColorCustomizationProps {
 
 // Thèmes prédéfinis DaisyUI
 const DAISY_THEMES = [
-  { name: 'sunset', label: '🌅 Sunset (Isaraya)', colors: { primary: '#ff5f10', secondary: '#DB924B', accent: '#FFB347', neutral: '#5C4033', base: '#FFF5E6' } },
+  { name: 'sunset', label: '🌅 Sunset', colors: { primary: '#ff5f10', secondary: '#DB924B', accent: '#FFB347', neutral: '#5C4033', base: '#FFF5E6' } },
   { name: 'light', label: 'Clair', colors: { primary: '#570df8', secondary: '#f000b8', accent: '#37cdbe', neutral: '#3d4451', base: '#ffffff' } },
   { name: 'dark', label: 'Sombre', colors: { primary: '#661AE6', secondary: '#D926AA', accent: '#1FB2A5', neutral: '#191D24', base: '#1d232a' } },
   { name: 'cupcake', label: 'Cupcake', colors: { primary: '#65c3c8', secondary: '#ef9fbc', accent: '#eeaf3a', neutral: '#291334', base: '#faf7f5' } },

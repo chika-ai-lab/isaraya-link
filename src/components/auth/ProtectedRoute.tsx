@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+"use client";
+import { ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
@@ -10,6 +11,13 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, redirectTo = '/auth' }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace(redirectTo);
+    }
+  }, [loading, user, redirectTo, router]);
 
   if (loading) {
     return (
@@ -20,7 +28,7 @@ export const ProtectedRoute = ({ children, redirectTo = '/auth' }: ProtectedRout
   }
 
   if (!user) {
-    return <Navigate to={redirectTo} replace />;
+    return null;
   }
 
   return <>{children}</>;

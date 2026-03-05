@@ -1,5 +1,6 @@
+"use client";
 import { useProfile } from '@/contexts/ProfileContext';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -12,18 +13,14 @@ import { Building2, Plus } from 'lucide-react';
 
 export const ProfileSwitcher = () => {
   const { currentProfile, profiles, setCurrentProfile } = useProfile();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   if (profiles.length === 0) {
     return (
       <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
         <Building2 className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Aucun profil</span>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => navigate('/dashboard')}
-        >
+        <Button size="sm" variant="outline" onClick={() => router.push('/dashboard')}>
           <Plus className="h-4 w-4 mr-1" />
           Créer un profil
         </Button>
@@ -40,8 +37,7 @@ export const ProfileSwitcher = () => {
           const profile = profiles.find((p) => p.id === value);
           if (profile) {
             setCurrentProfile(profile);
-            // Naviguer vers la page de settings de ce profil
-            navigate(`/dashboard/profile/${value}`);
+            router.push(`/dashboard/profile/${value}`);
           }
         }}
       >
@@ -59,12 +55,7 @@ export const ProfileSwitcher = () => {
           ))}
         </SelectContent>
       </Select>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => navigate('/dashboard')}
-        title="Voir tous mes profils"
-      >
+      <Button size="sm" variant="outline" onClick={() => router.push('/dashboard')} title="Voir tous mes profils">
         Mes profils
       </Button>
     </div>

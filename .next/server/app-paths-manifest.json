@@ -1,0 +1,6 @@
+{
+  "/api/profiles/route": "app/api/profiles/route.js",
+  "/api/profiles/[id]/route": "app/api/profiles/[id]/route.js",
+  "/api/services/route": "app/api/services/route.js",
+  "/dashboard/profile/[profileId]/page": "app/dashboard/profile/[profileId]/page.js"
+}

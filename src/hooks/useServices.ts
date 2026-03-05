@@ -1,80 +1,51 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Service, ServiceInsert, ServiceUpdate } from '@/types';
 import { toast } from 'sonner';
 
-/**
- * Hook pour récupérer tous les services d'un profil
- */
+async function apiFetch(url: string, options?: RequestInit) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Erreur réseau' }));
+    throw new Error(err.error || 'Erreur serveur');
+  }
+  return res.json();
+}
+
 export const useServices = (profileId: string | null | undefined) => {
   return useQuery({
     queryKey: ['services', profileId],
-    queryFn: async () => {
-      if (!profileId) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('profile_id', profileId)
-        .order('display_order', { ascending: true });
-
-      if (error) throw error;
-      return data as Service[];
-    },
+    queryFn: () => apiFetch(`/api/services?profileId=${profileId}`),
     enabled: !!profileId,
   });
 };
 
-/**
- * Hook pour récupérer les services publics d'un profil (actifs uniquement)
- */
 export const usePublicServices = (profileId: string | undefined) => {
   return useQuery({
     queryKey: ['services', 'public', profileId],
-    queryFn: async () => {
-      if (!profileId) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('profile_id', profileId)
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-
-      if (error) throw error;
-      return data as Service[];
-    },
+    queryFn: () => apiFetch(`/api/services?profileId=${profileId}`),
     enabled: !!profileId,
   });
 };
 
-/**
- * Hook pour créer un nouveau service
- */
 export const useCreateService = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (service: ServiceInsert) => {
-      if (!service.profile_id) {
-        throw new Error('Le profile_id est requis');
-      }
-
-      const { data, error } = await supabase
-        .from('services')
-        .insert(service)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Service;
-    },
+    mutationFn: async (service: ServiceInsert) =>
+      apiFetch('/api/services', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId: service.profile_id,
+          title: service.title,
+          description: service.description,
+          icon: service.icon,
+          isActive: service.is_active,
+          displayOrder: service.display_order,
+        }),
+      }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['services', data.profile_id] });
+      queryClient.invalidateQueries({ queryKey: ['services', data.profileId] });
       toast.success('Service créé avec succès!');
     },
     onError: (error: Error) => {
@@ -83,26 +54,18 @@ export const useCreateService = () => {
   });
 };
 
-/**
- * Hook pour mettre à jour un service
- */
 export const useUpdateService = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: ServiceUpdate }) => {
-      const { data, error } = await supabase
-        .from('services')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Service;
-    },
+    mutationFn: async ({ id, updates }: { id: string; updates: ServiceUpdate }) =>
+      apiFetch(`/api/services/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['services', data.profile_id] });
+      queryClient.invalidateQueries({ queryKey: ['services', data.profileId] });
       toast.success('Service mis à jour avec succès!');
     },
     onError: (error: Error) => {
@@ -111,20 +74,12 @@ export const useUpdateService = () => {
   });
 };
 
-/**
- * Hook pour supprimer un service
- */
 export const useDeleteService = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, profileId }: { id: string; profileId: string }) => {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await apiFetch(`/api/services/${id}`, { method: 'DELETE' });
       return profileId;
     },
     onSuccess: (profileId) => {

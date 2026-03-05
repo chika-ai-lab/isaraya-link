@@ -1,14 +1,40 @@
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-
 // ============================================
 // Profile Types
 // ============================================
 
-export type Profile = Tables<'profiles'>;
-export type ProfileInsert = TablesInsert<'profiles'>;
-export type ProfileUpdate = TablesUpdate<'profiles'>;
+export interface Profile {
+  id: string;
+  user_id: string | null;
+  slug: string;
+  company_name: string;
+  slogan: string;
+  logo_url: string | null;
+  phone: string;
+  email: string;
+  address: string;
+  google_maps_url: string | null;
+  website: string;
+  description: string;
+  facebook: string | null;
+  instagram: string | null;
+  twitter: string | null;
+  linkedin: string | null;
+  whatsapp: string | null;
+  tiktok: string | null;
+  youtube: string | null;
+  custom_colors: any | null;
+  theme_preset: string | null;
+  qr_code_size: number;
+  is_active: boolean;
+  created_at: string;
+}
 
-// Profile avec statistiques
+export type ProfileInsert = Partial<Omit<Profile, 'id' | 'created_at'>> & {
+  slug: string;
+  company_name: string;
+};
+export type ProfileUpdate = Partial<Omit<Profile, 'id' | 'created_at'>>;
+
 export type ProfileWithStats = Profile & {
   products_count?: number;
   services_count?: number;
@@ -19,49 +45,86 @@ export type ProfileWithStats = Profile & {
 // Product Types
 // ============================================
 
-export type Product = Tables<'products'>;
-export type ProductInsert = TablesInsert<'products'>;
-export type ProductUpdate = TablesUpdate<'products'>;
+export interface Product {
+  id: string;
+  profile_id: string;
+  title: string;
+  description: string;
+  price: string | null;
+  image_url: string | null;
+  is_featured: boolean;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+}
 
-// Product avec relation profile
-export type ProductWithProfile = Product & {
-  profile?: Profile;
+export type ProductInsert = Partial<Omit<Product, 'id' | 'created_at'>> & {
+  profile_id: string;
+  title: string;
 };
+export type ProductUpdate = Partial<Omit<Product, 'id' | 'created_at'>>;
+
+export type ProductWithProfile = Product & { profile?: Profile };
 
 // ============================================
 // Service Types
 // ============================================
 
-export type Service = Tables<'services'>;
-export type ServiceInsert = TablesInsert<'services'>;
-export type ServiceUpdate = TablesUpdate<'services'>;
+export interface Service {
+  id: string;
+  profile_id: string;
+  title: string;
+  description: string;
+  icon: string;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+}
 
-// Service avec relation profile
-export type ServiceWithProfile = Service & {
-  profile?: Profile;
+export type ServiceInsert = Partial<Omit<Service, 'id' | 'created_at'>> & {
+  profile_id: string;
+  title: string;
 };
+export type ServiceUpdate = Partial<Omit<Service, 'id' | 'created_at'>>;
+
+export type ServiceWithProfile = Service & { profile?: Profile };
 
 // ============================================
 // Promotion Types
 // ============================================
 
-export type Promotion = Tables<'promotions'>;
-export type PromotionInsert = TablesInsert<'promotions'>;
-export type PromotionUpdate = TablesUpdate<'promotions'>;
+export interface Promotion {
+  id: string;
+  profile_id: string;
+  title: string;
+  description: string;
+  discount_text: string | null;
+  is_active: boolean;
+  valid_until: string | null;
+  display_order: number;
+  created_at: string;
+}
 
-// Promotion avec relation profile
-export type PromotionWithProfile = Promotion & {
-  profile?: Profile;
+export type PromotionInsert = Partial<Omit<Promotion, 'id' | 'created_at'>> & {
+  profile_id: string;
+  title: string;
 };
+export type PromotionUpdate = Partial<Omit<Promotion, 'id' | 'created_at'>>;
+
+export type PromotionWithProfile = Promotion & { profile?: Profile };
 
 // ============================================
 // User Types
 // ============================================
 
-export type UserRole = Tables<'user_roles'>;
+export interface UserRole {
+  id: string;
+  user_id: string;
+  role: string;
+}
 
 // ============================================
-// Form Types (pour les formulaires)
+// Form Types
 // ============================================
 
 export interface CustomColors {

@@ -1,5 +1,6 @@
+"use client";
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Profile } from '@/types';
 import { useDeleteProfile } from '@/hooks/useProfiles';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -23,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MoreVertical, Eye, Edit, QrCode, Trash2, ExternalLink } from 'lucide-react';
+import { MoreVertical, Eye, Edit, Trash2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProfileCardProps {
@@ -31,7 +32,7 @@ interface ProfileCardProps {
 }
 
 export const ProfileCard = ({ profile }: ProfileCardProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const deleteProfile = useDeleteProfile();
   const { setCurrentProfile } = useProfile();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -39,13 +40,11 @@ export const ProfileCard = ({ profile }: ProfileCardProps) => {
   const profileUrl = `/${profile.slug}`;
   const fullUrl = `${window.location.origin}${profileUrl}`;
 
-  const handleView = () => {
-    navigate(profileUrl);
-  };
+  const handleView = () => router.push(profileUrl);
 
   const handleEdit = () => {
     setCurrentProfile(profile);
-    navigate(`/dashboard/profile/${profile.id}`);
+    router.push(`/dashboard/profile/${profile.id}`);
   };
 
   const handleDelete = async () => {
@@ -127,7 +126,6 @@ export const ProfileCard = ({ profile }: ProfileCardProps) => {
         </CardFooter>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

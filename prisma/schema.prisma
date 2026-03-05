@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  passwordHash        String               @map("password_hash")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  passwordResetTokens PasswordResetToken[]
+  profiles            Profile[]
+  roles               UserRole[]
+
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("password_reset_tokens")
+}
+
+model UserRole {
+  id     String  @id @default(uuid())
+  userId String  @map("user_id")
+  role   AppRole
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@map("user_roles")
+}
+
+model Profile {
+  id            String      @id @default(uuid())
+  userId        String?     @map("user_id")
+  slug          String      @unique
+  companyName   String      @map("company_name")
+  slogan        String?     @default("")
+  logoUrl       String?     @map("logo_url")
+  phone         String?     @default("")
+  email         String?     @default("")
+  address       String?     @default("")
+  googleMapsUrl String?     @map("google_maps_url")
+  website       String?     @default("")
+  description   String?     @default("")
+  facebook      String?
+  instagram     String?
+  twitter       String?
+  linkedin      String?
+  whatsapp      String?
+  tiktok        String?
+  youtube       String?
+  customColors  Json?       @map("custom_colors")
+  themePreset   String?     @map("theme_preset")
+  qrCodeSize    Int         @default(512) @map("qr_code_size")
+  isActive      Boolean     @default(true) @map("is_active")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  products      Product[]
+  user          User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promotions    Promotion[]
+  services      Service[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([isActive])
+  @@map("profiles")
+}
+
+model Product {
+  id           String   @id @default(uuid())
+  profileId    String   @map("profile_id")
+  title        String
+  description  String
+  price        String?
+  imageUrl     String?  @map("image_url")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("products")
+}
+
+model Service {
+  id           String   @id @default(uuid())
+  profileId    String   @map("profile_id")
+  title        String
+  description  String
+  icon         String
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("services")
+}
+
+model Promotion {
+  id           String    @id @default(uuid())
+  profileId    String    @map("profile_id")
+  title        String
+  description  String
+  discountText String?   @map("discount_text")
+  isActive     Boolean   @default(true) @map("is_active")
+  validUntil   DateTime? @map("valid_until")
+  displayOrder Int       @default(0) @map("display_order")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("promotions")
+}
+
+model CompanyInfo {
+  id            String   @id @default(uuid())
+  companyName   String   @default("Isaraya") @map("company_name")
+  slogan        String   @default("") @map("slogan")
+  phone         String   @default("")
+  email         String   @default("")
+  address       String   @default("")
+  googleMapsUrl String?  @map("google_maps_url")
+  website       String   @default("")
+  description   String   @default("")
+  facebook      String?
+  instagram     String?
+  twitter       String?
+  linkedin      String?
+  whatsapp      String?
+  tiktok        String?
+  youtube       String?
+  customColors  Json?    @map("custom_colors")
+  themePreset   String?  @map("theme_preset")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("company_info")
+}
+
+enum AppRole {
+  admin
+  user
+
+  @@map("app_role")
+}

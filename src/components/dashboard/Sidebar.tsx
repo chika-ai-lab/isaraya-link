@@ -59,11 +59,12 @@ export function Sidebar({ items, activeTab, onTabChange }: SidebarProps) {
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold">Navigation</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Gérez votre profil
-            </p>
+          <div className="p-4 border-b flex items-center gap-3">
+            <img src="/logo-icon.svg" alt="STS Link" className="h-9 w-9" />
+            <div>
+              <h2 className="text-sm font-bold leading-tight">STS Link</h2>
+              <p className="text-xs text-muted-foreground">Gérez votre profil</p>
+            </div>
           </div>
 
           {/* Menu Items */}
@@ -96,11 +97,7 @@ export function Sidebar({ items, activeTab, onTabChange }: SidebarProps) {
 
           {/* Footer */}
           <div className="p-4 border-t">
-            <div className="bg-muted/50 p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground text-center">
-                Isaraya Link
-              </p>
-            </div>
+            <img src="/logo.svg" alt="STS Link" className="h-7 w-auto opacity-70" />
           </div>
         </div>
       </aside>

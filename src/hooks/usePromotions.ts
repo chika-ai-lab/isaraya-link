@@ -1,80 +1,52 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Promotion, PromotionInsert, PromotionUpdate } from '@/types';
 import { toast } from 'sonner';
 
-/**
- * Hook pour récupérer toutes les promotions d'un profil
- */
+async function apiFetch(url: string, options?: RequestInit) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Erreur réseau' }));
+    throw new Error(err.error || 'Erreur serveur');
+  }
+  return res.json();
+}
+
 export const usePromotions = (profileId: string | null | undefined) => {
   return useQuery({
     queryKey: ['promotions', profileId],
-    queryFn: async () => {
-      if (!profileId) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('promotions')
-        .select('*')
-        .eq('profile_id', profileId)
-        .order('display_order', { ascending: true });
-
-      if (error) throw error;
-      return data as Promotion[];
-    },
+    queryFn: () => apiFetch(`/api/promotions?profileId=${profileId}`),
     enabled: !!profileId,
   });
 };
 
-/**
- * Hook pour récupérer les promotions publiques d'un profil (actives uniquement)
- */
 export const usePublicPromotions = (profileId: string | undefined) => {
   return useQuery({
     queryKey: ['promotions', 'public', profileId],
-    queryFn: async () => {
-      if (!profileId) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('promotions')
-        .select('*')
-        .eq('profile_id', profileId)
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-
-      if (error) throw error;
-      return data as Promotion[];
-    },
+    queryFn: () => apiFetch(`/api/promotions?profileId=${profileId}`),
     enabled: !!profileId,
   });
 };
 
-/**
- * Hook pour créer une nouvelle promotion
- */
 export const useCreatePromotion = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (promotion: PromotionInsert) => {
-      if (!promotion.profile_id) {
-        throw new Error('Le profile_id est requis');
-      }
-
-      const { data, error } = await supabase
-        .from('promotions')
-        .insert(promotion)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Promotion;
-    },
+    mutationFn: async (promotion: PromotionInsert) =>
+      apiFetch('/api/promotions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileId: promotion.profile_id,
+          title: promotion.title,
+          description: promotion.description,
+          discountText: promotion.discount_text,
+          isActive: promotion.is_active,
+          validUntil: promotion.valid_until,
+          displayOrder: promotion.display_order,
+        }),
+      }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['promotions', data.profile_id] });
+      queryClient.invalidateQueries({ queryKey: ['promotions', data.profileId] });
       toast.success('Promotion créée avec succès!');
     },
     onError: (error: Error) => {
@@ -83,26 +55,18 @@ export const useCreatePromotion = () => {
   });
 };
 
-/**
- * Hook pour mettre à jour une promotion
- */
 export const useUpdatePromotion = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: PromotionUpdate }) => {
-      const { data, error } = await supabase
-        .from('promotions')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Promotion;
-    },
+    mutationFn: async ({ id, updates }: { id: string; updates: PromotionUpdate }) =>
+      apiFetch(`/api/promotions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['promotions', data.profile_id] });
+      queryClient.invalidateQueries({ queryKey: ['promotions', data.profileId] });
       toast.success('Promotion mise à jour avec succès!');
     },
     onError: (error: Error) => {
@@ -111,20 +75,12 @@ export const useUpdatePromotion = () => {
   });
 };
 
-/**
- * Hook pour supprimer une promotion
- */
 export const useDeletePromotion = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, profileId }: { id: string; profileId: string }) => {
-      const { error } = await supabase
-        .from('promotions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await apiFetch(`/api/promotions/${id}`, { method: 'DELETE' });
       return profileId;
     },
     onSuccess: (profileId) => {

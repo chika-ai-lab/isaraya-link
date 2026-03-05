@@ -3,8 +3,8 @@
  * Handles image uploads to Cloudinary for products, profiles, and other assets
  */
 
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dw4pf6awx';
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'isaraya_unsigned';
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 export interface CloudinaryUploadResponse {
   secure_url: string;
@@ -34,7 +34,7 @@ export async function uploadToCloudinary(
 ): Promise<CloudinaryUploadResponse> {
   if (!CLOUDINARY_CLOUD_NAME) {
     throw new Error(
-      'Cloudinary configuration is missing. Please set VITE_CLOUDINARY_CLOUD_NAME in your .env file'
+      'Cloudinary configuration is missing. Please set NEXT_CLOUDINARY_CLOUD_NAME in your .env file'
     );
   }
 
@@ -112,7 +112,7 @@ export function getCloudinaryUrl(
   transformations?: string
 ): string {
   if (!CLOUDINARY_CLOUD_NAME) {
-    throw new Error('VITE_CLOUDINARY_CLOUD_NAME is not configured');
+    throw new Error('NEXT_CLOUDINARY_CLOUD_NAME is not configured');
   }
 
   const baseUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload`;

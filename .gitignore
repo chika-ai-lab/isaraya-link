@@ -31,3 +31,4 @@ supabase/.temp/
 .env.production
 .env.local
 .env.*.local
+/generated/prisma

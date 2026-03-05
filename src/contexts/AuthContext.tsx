@@ -1,117 +1,93 @@
+"use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface AuthUser {
+  id: string;
+  email: string;
+  role?: string;
+}
+
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: AuthUser | null;
+  session: null; // kept for compatibility
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  setUser: (user: AuthUser | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Récupérer la session initiale
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Écouter les changements d'authentification
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    fetch('/api/auth/me')
+      .then((r) => r.json())
+      .then(({ user }) => {
+        setUser(user ?? null);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        toast.success('Connexion réussie!');
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la connexion');
-      throw error;
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.error || 'Erreur lors de la connexion');
+      throw new Error(data.error);
     }
+    setUser(data.user);
+    toast.success('Connexion réussie!');
   };
 
   const signUp = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        toast.success('Inscription réussie! Vérifiez votre email pour confirmer votre compte.');
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de l\'inscription');
-      throw error;
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.error || "Erreur lors de l'inscription");
+      throw new Error(data.error);
     }
+    setUser(data.user);
+    toast.success('Inscription réussie!');
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      toast.success('Déconnexion réussie!');
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la déconnexion');
-      throw error;
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
+    toast.success('Déconnexion réussie!');
   };
 
   const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) throw error;
-      toast.success('Email de réinitialisation envoyé!');
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de l\'envoi de l\'email');
-      throw error;
-    }
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur lors de la demande');
   };
 
-  const value = {
-    user,
-    session,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    resetPassword,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, session: null, loading, signIn, signUp, signOut, resetPassword, setUser }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
