@@ -1,11 +1,9 @@
 [build]
   command = "npm run build"
-  publish = "dist"
+  publish = ".next"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [secrets_scanning]
   omit_keys = ["NEXT_SUPABASE_URL", "NEXT_SUPABASE_PROJECT_ID", "NEXT_SUPABASE_PUBLISHABLE_KEY"]
