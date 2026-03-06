@@ -1,8 +1,12 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Settings, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Settings, Loader2, Phone, Mail, User } from "lucide-react";
 import { useProfileBySlug } from "@/hooks/useProfiles";
 import { usePublicProducts } from "@/hooks/useProducts";
 import { usePublicServices } from "@/hooks/useServices";
@@ -17,14 +21,27 @@ import ProductSection from "@/components/ProductSection";
 import PromotionSection from "@/components/PromotionSection";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import NotFound from "./NotFound";
+import { Commercial } from "@/types";
 
 const ProfileView = () => {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
+  const commercialId = searchParams.get("c");
+
   const { data: profile, isLoading, error } = useProfileBySlug(slug);
   const { data: products = [] } = usePublicProducts(profile?.id);
   const { data: services = [] } = usePublicServices(profile?.id);
   const { data: promotions = [] } = usePublicPromotions(profile?.id);
+  const { data: commercial } = useQuery<Commercial>({
+    queryKey: ["commercial-public", commercialId],
+    queryFn: async () => {
+      const res = await fetch(`/api/commercials/${commercialId}`);
+      if (!res.ok) throw new Error("Introuvable");
+      return res.json();
+    },
+    enabled: !!commercialId,
+  });
 
   // Appliquer le thème personnalisé du profil
   useProfileTheme(profile);
@@ -62,6 +79,54 @@ const ProfileView = () => {
         <ServiceSection services={services} />
         <ProductSection products={products} />
         <PromotionSection promotions={promotions} />
+
+        {/* Section commercial — visible uniquement via QR commercial */}
+        {commercial && (
+          <section className="px-4 sm:px-6 py-8 max-w-2xl mx-auto">
+            <Separator className="mb-8" />
+            <div className="flex flex-col items-center text-center gap-4">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={commercial.photo_url ?? undefined} alt={`${commercial.first_name} ${commercial.last_name}`} />
+                <AvatarFallback className="text-2xl bg-primary/10 text-primary font-semibold">
+                  {commercial.first_name?.[0]}{commercial.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-2xl font-bold">
+                  {commercial.first_name} {commercial.last_name}
+                </h2>
+                {commercial.position && (
+                  <Badge variant="secondary" className="mt-1">
+                    {commercial.position}
+                  </Badge>
+                )}
+              </div>
+              {commercial.bio && (
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
+                  {commercial.bio}
+                </p>
+              )}
+              <div className="flex flex-col gap-2 w-full max-w-xs">
+                {commercial.phone && (
+                  <Button asChild variant="outline" className="w-full gap-2">
+                    <a href={`tel:${commercial.phone}`}>
+                      <Phone className="h-4 w-4 text-primary" />
+                      {commercial.phone}
+                    </a>
+                  </Button>
+                )}
+                {commercial.email && (
+                  <Button asChild variant="outline" className="w-full gap-2">
+                    <a href={`mailto:${commercial.email}`}>
+                      <Mail className="h-4 w-4 text-primary" />
+                      {commercial.email}
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <WhatsAppButton profile={profile} />

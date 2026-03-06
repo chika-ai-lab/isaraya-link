@@ -47,7 +47,7 @@ function CommercialQRDialog({
   onClose: () => void;
 }) {
   const qrRef = useRef<HTMLDivElement>(null);
-  const qrUrl = `${window.location.origin}/${profileSlug}/commercial/${commercial.id}`;
+  const qrUrl = `${window.location.origin}/${profileSlug}?c=${commercial.id}`;
   const fullName = `${commercial.first_name} ${commercial.last_name}`;
 
   const handleDownload = () => {
@@ -278,6 +278,7 @@ export function CommercialsManager({ profileId, profileSlug }: CommercialsManage
               {commercials.map((c) => {
                 const fullName = `${c.first_name} ${c.last_name}`;
                 const initials = `${c.first_name?.[0] ?? ""}${c.last_name?.[0] ?? ""}`.toUpperCase();
+                const qrUrl = `${window.location.origin}/${profileSlug}?c=${c.id}`;
                 return (
                   <div
                     key={c.id}
@@ -297,6 +298,9 @@ export function CommercialsManager({ profileId, profileSlug }: CommercialsManage
                       {c.position && (
                         <p className="text-sm text-muted-foreground truncate">{c.position}</p>
                       )}
+                      <p className="text-xs text-muted-foreground/60 truncate mt-0.5 font-mono">
+                        {qrUrl}
+                      </p>
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                         {c.phone && (
                           <span className="flex items-center gap-1">

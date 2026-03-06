@@ -14,13 +14,10 @@ async function canManage(userId: string, role: string, commercialId: string) {
   return commercial?.profile?.userId === userId;
 }
 
-// GET /api/commercials/[id] — infos publiques d'un commercial (pour la page QR)
+// GET /api/commercials/[id] — infos publiques d'un commercial
 export async function GET(_request: NextRequest, { params }: Params) {
   const { id } = await params;
-  const commercial = await prisma.commercial.findUnique({
-    where: { id },
-    include: { profile: true },
-  });
+  const commercial = await prisma.commercial.findUnique({ where: { id } });
   if (!commercial) return NextResponse.json({ error: "Commercial introuvable" }, { status: 404 });
   return NextResponse.json(toSnake(commercial));
 }
