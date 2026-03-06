@@ -70,9 +70,10 @@ model Profile {
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
   products      Product[]
-  user          User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   promotions    Promotion[]
   services      Service[]
+  commercials   Commercial[]
 
   @@index([userId])
   @@index([slug])
@@ -154,6 +155,25 @@ model CompanyInfo {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("company_info")
+}
+
+model Commercial {
+  id        String   @id @default(uuid())
+  profileId String   @map("profile_id")
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  position  String   @default("")
+  phone     String?
+  email     String?
+  photoUrl  String?  @map("photo_url")
+  bio       String?  @default("")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("commercials")
 }
 
 enum AppRole {

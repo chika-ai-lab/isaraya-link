@@ -14,6 +14,7 @@ import { ServicesManager } from "@/components/admin/ServicesManager";
 import { ProductsManager } from "@/components/admin/ProductsManager";
 import { PromotionsManager } from "@/components/admin/PromotionsManager";
 import { QRCodeGenerator } from "@/components/admin/QRCodeGenerator";
+import { CommercialsManager } from "@/components/admin/CommercialsManager";
 import { LogoUpload } from "@/components/admin/LogoUpload";
 import { ColorCustomization } from "@/components/admin/ColorCustomization";
 import {
@@ -192,6 +193,10 @@ function ProfileSettingsContent({ profile }: { profile: Profile }) {
 
             {activeTab === "promotions" && (
               <PromotionsManager profileId={profile.id} />
+            )}
+
+            {activeTab === "commercials" && (
+              <CommercialsManager profileId={profile.id} profileSlug={profile.slug} />
             )}
 
             {activeTab === "qrcode" && <QRCodeGenerator profile={profile} />}

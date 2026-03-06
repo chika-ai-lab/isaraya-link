@@ -10,6 +10,7 @@ import {
   Briefcase,
   Tag,
   QrCode,
+  Users,
   Menu,
   X,
 } from "lucide-react";
@@ -114,5 +115,6 @@ export const defaultSidebarItems: SidebarItem[] = [
   { value: "products", label: "Produits", icon: Package },
   { value: "services", label: "Services", icon: Briefcase },
   { value: "promotions", label: "Promotions", icon: Tag },
+  { value: "commercials", label: "Commerciaux", icon: Users },
   { value: "qrcode", label: "QR Code", icon: QrCode },
 ];

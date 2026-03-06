@@ -114,6 +114,42 @@ export type PromotionUpdate = Partial<Omit<Promotion, 'id' | 'created_at'>>;
 export type PromotionWithProfile = Promotion & { profile?: Profile };
 
 // ============================================
+// Commercial Types
+// ============================================
+
+export interface Commercial {
+  id: string;
+  profile_id: string;
+  first_name: string;
+  last_name: string;
+  position: string;
+  phone: string | null;
+  email: string | null;
+  photo_url: string | null;
+  bio: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export type CommercialInsert = Partial<Omit<Commercial, 'id' | 'created_at'>> & {
+  profile_id: string;
+  first_name: string;
+  last_name: string;
+};
+export type CommercialUpdate = Partial<Omit<Commercial, 'id' | 'created_at'>>;
+
+export interface CommercialFormData {
+  first_name: string;
+  last_name: string;
+  position?: string;
+  phone?: string;
+  email?: string;
+  photo_url?: string;
+  bio?: string;
+  is_active?: boolean;
+}
+
+// ============================================
 // User Types
 // ============================================
 
