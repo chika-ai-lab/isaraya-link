@@ -53,25 +53,42 @@ function CommercialQRDialog({
   const handleDownload = () => {
     const svg = qrRef.current?.querySelector("svg");
     if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    canvas.width = 512;
-    canvas.height = 512;
-    img.onload = () => {
-      ctx?.drawImage(img, 0, 0);
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = `qrcode-${commercial.first_name}-${commercial.last_name}.png`;
-        link.href = url;
-        link.click();
-        URL.revokeObjectURL(url);
-      });
-    };
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+
+    const SIZE = 1024;
+    const QR_SIZE = 800;
+    const OFFSET = (SIZE - QR_SIZE) / 2; // 112px de marge de chaque côté
+
+    // Clone le SVG du QR et ajuste sa taille
+    const qrClone = svg.cloneNode(true) as SVGElement;
+    qrClone.setAttribute("width", String(QR_SIZE));
+    qrClone.setAttribute("height", String(QR_SIZE));
+
+    // Crée le SVG enveloppe 1024×1024
+    const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    wrapper.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    wrapper.setAttribute("width", String(SIZE));
+    wrapper.setAttribute("height", String(SIZE));
+    wrapper.setAttribute("viewBox", `0 0 ${SIZE} ${SIZE}`);
+
+    const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    bg.setAttribute("width", String(SIZE));
+    bg.setAttribute("height", String(SIZE));
+    bg.setAttribute("fill", "#FFFFFF");
+    wrapper.appendChild(bg);
+
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("transform", `translate(${OFFSET}, ${OFFSET})`);
+    g.appendChild(qrClone);
+    wrapper.appendChild(g);
+
+    const svgData = new XMLSerializer().serializeToString(wrapper);
+    const blob = new Blob([svgData], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = `qrcode-${commercial.first_name}-${commercial.last_name}.svg`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
