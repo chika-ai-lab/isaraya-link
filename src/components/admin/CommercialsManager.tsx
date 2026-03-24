@@ -104,7 +104,7 @@ function CommercialQRDialog({
           <p className="text-xs text-muted-foreground text-center break-all">{qrUrl}</p>
           <Button onClick={handleDownload} variant="outline" className="w-full gap-2">
             <Download className="h-4 w-4" />
-            Télécharger en PNG
+            Télécharger en SVG
           </Button>
         </div>
       </DialogContent>
